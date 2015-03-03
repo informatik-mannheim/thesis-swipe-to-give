@@ -1,4 +1,4 @@
-# Thesis "..."
+# Thesis "Swipe To Give"
 
 ## German Abstract
 
