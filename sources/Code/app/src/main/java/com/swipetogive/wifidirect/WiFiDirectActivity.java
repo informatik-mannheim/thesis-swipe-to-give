@@ -1,6 +1,5 @@
 package com.swipetogive.wifidirect;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,11 +11,9 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
-import android.nfc.NdefMessage;
-import android.nfc.NfcAdapter;
-import android.nfc.NfcEvent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,17 +25,15 @@ import com.swipetogive.R;
 import com.swipetogive.util.ApplicationBroadcastReceiver;
 import com.swipetogive.wifidirect.DeviceListFragment.DeviceActionListener;
 
-
-public class WiFiDirectActivity extends Activity implements ChannelListener, DeviceActionListener, NfcAdapter.CreateNdefMessageCallback,
-        NfcAdapter.OnNdefPushCompleteCallback {
+public class WiFiDirectActivity extends ActionBarActivity implements ChannelListener, DeviceActionListener {
 
     public static final String TAG = "wifidirectdemo";
-    private WifiP2pManager manager;
+    public WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
 
     private final IntentFilter intentFilter = new IntentFilter();
-    private Channel channel;
+    public Channel channel;
     private BroadcastReceiver receiver = null;
 
     /**
@@ -104,8 +99,8 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
     }
 
     /**
-     * Remove all peers and clear all fields. This is called on
-     * BroadcastReceiver receiving a state change event.
+     * Remove all peers and clear all fields.
+     * This is called on BroadcastReceiver receiving a state change event.
      */
     public void resetData() {
         DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
@@ -251,15 +246,5 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
     public boolean getIsWifiP2pEnabled() {
 
         return isWifiP2pEnabled;
-    }
-
-    @Override
-    public NdefMessage createNdefMessage(NfcEvent event) {
-        return null;
-    }
-
-    @Override
-    public void onNdefPushComplete(NfcEvent event) {
-
     }
 }
