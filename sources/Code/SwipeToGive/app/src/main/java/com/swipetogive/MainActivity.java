@@ -94,7 +94,6 @@ public class MainActivity extends ActionBarActivity {
 
                             if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
                                 //if(imageView.getDrawable() != null) {
-                                // Todo: Send image
                                 WifiP2pInfo info = DeviceDetailFragment.getWiFiInfo();
                                 Log.d("info", info.toString());
 
@@ -104,8 +103,10 @@ public class MainActivity extends ActionBarActivity {
                                 serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                                         info.groupOwnerAddress.getHostAddress());
                                 serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+
                                 MainActivity.this.startService(serviceIntent);
-                                Toast.makeText(getApplicationContext(),"Down to UP Swipe Performed!",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
+
                                 setContentView(R.layout.empty_view);
                                 return true;
                             }

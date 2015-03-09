@@ -4,9 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
@@ -36,6 +38,8 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
     public Channel channel;
     private BroadcastReceiver receiver = null;
 
+    private static Context context;
+
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
      */
@@ -43,11 +47,16 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         this.isWifiP2pEnabled = isWifiP2pEnabled;
     }
 
+    public static Context getAppContext() {
+        return context;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wifi_direct);
 
+        context = getApplicationContext();
         getSupportActionBar().setTitle("WiFi Devices");
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -65,6 +74,8 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
             return;
         } else {
             isWifiP2pEnabled = true;
+            WifiInfo currentWifi = wifi.getConnectionInfo();
+            Log.d("networkId", currentWifi.getNetworkId() + "");
         }
 
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
@@ -133,11 +144,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         switch (item.getItemId()) {
             case R.id.atn_direct_enable:
                 if (manager != null && channel != null) {
-
-                    // Since this is the system wireless settings activity, it's
-                    // not going to send us a result. We will be notified by
-                    // WiFiDeviceBroadcastReceiver instead.
-
                     startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 } else {
                     Log.e(TAG, "channel or manager is null");
@@ -173,7 +179,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
 
     @Override
     public void showDetails(WifiP2pDevice device) {
-        Log.d("details", "details-wifi-direct");
         DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
         fragment.showDetails(device);
@@ -186,6 +191,7 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
             @Override
             public void onSuccess() {
                 // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+                Log.d("connection", "success");
             }
 
             @Override
@@ -201,6 +207,7 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         final DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
         fragment.resetViews();
+
         manager.removeGroup(channel, new ActionListener() {
 
             @Override
