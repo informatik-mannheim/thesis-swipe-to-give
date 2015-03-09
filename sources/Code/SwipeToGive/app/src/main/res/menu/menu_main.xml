@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
+    <item android:id="@+id/buttonLoadPicture" android:title="@string/choose_file"
+        android:orderInCategory="100" app:showAsAction="ifRoom|withText" />
+    <item android:id="@+id/showBluetoothPeers" android:title="@string/show_ble_peers"
+        android:orderInCategory="101" app:showAsAction="never" />
+    <item android:id="@+id/showWiFiPeers" android:title="@string/show_wifi_peers"
+        android:orderInCategory="102" app:showAsAction="never" />
+</menu>
