@@ -81,15 +81,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     progressDialog.dismiss();
                 }
                 progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
-                        "Connecting to :" + device.deviceAddress, true, true
-//                        new DialogInterface.OnCancelListener() {
-//
-//                            @Override
-//                            public void onCancel(DialogInterface dialog) {
-//                                ((DeviceActionListener) getActivity()).cancelDisconnect();
-//                            }
-//                        }
-                        );
+                        "Connecting to :" + device.deviceAddress, true, true);
                 ((DeviceActionListener) getActivity()).connect(config);
 
             }
@@ -235,17 +227,18 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                 Bitmap bitmap;
                 bitmap = BitmapFactory.decodeStream(client.getInputStream());
-                MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "title" , "description");
+                MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "Image" , "Image from Swipe To Give");
 
-                File dirs = new File(f.getParent());
-                if (!dirs.exists())
-                    dirs.mkdirs();
-                f.createNewFile();
+                //File dirs = new File(f.getParent());
+                //if (!dirs.exists())
+                //    dirs.mkdirs();
+                //f.createNewFile();
 
-                Log.d(MainActivity.TAG, "server: copying files " + f.toString());
-                InputStream inputstream = client.getInputStream();
-                copyFile(inputstream, new FileOutputStream(f));
+                //Log.d(MainActivity.TAG, "server: copying files " + f.toString());
+                //InputStream inputstream = client.getInputStream();
+                //copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
+                Log.d("path", f.getAbsolutePath());
                 return f.getAbsolutePath();
             } catch (IOException e) {
                 Log.e(MainActivity.TAG, e.getMessage());

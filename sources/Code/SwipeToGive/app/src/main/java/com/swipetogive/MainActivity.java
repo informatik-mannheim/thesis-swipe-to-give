@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
@@ -23,6 +24,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import com.swipetogive.bluetooth.BluetoothActivity;
+import com.swipetogive.wifidirect.DeviceDetailFragment;
+import com.swipetogive.wifidirect.FileTransferService;
 import com.swipetogive.wifidirect.WiFiDirectActivity;
 
 public class MainActivity extends ActionBarActivity {
@@ -32,8 +35,7 @@ public class MainActivity extends ActionBarActivity {
 
     float y1,y2;
     ImageAdapter myImageAdapter;
-
-    Uri myUri;
+    Uri imgUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +45,6 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("RESULT data.getData", "" + data.getData());
         super.onActivityResult(requestCode, resultCode, data);
 
         ArrayList<String> images = new ArrayList<>();
@@ -51,9 +52,9 @@ public class MainActivity extends ActionBarActivity {
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == -1) {
 
             if(data.getData()!=null) {
-                Uri imgUri = data.getData();
+                imgUri = data.getData();
                 Log.d("path", imgUri.getLastPathSegment());
-                myUri = data.getData();
+
                 String path = getPath(this,imgUri);
                 images.add(path);
             } else if(data.getClipData()!=null){
@@ -70,19 +71,6 @@ public class MainActivity extends ActionBarActivity {
             } else {
                 Log.e("ERR", "No data received!");
             }
-
-            /*
-            String fileType = getType(uri);
-            Log.d("Type", fileType);
-
-            if(fileType.equals("image")) {
-                //ImageView imageView = (ImageView) findViewById(R.id.imgView);
-                //imageView.setImageBitmap(BitmapFactory.decodeFile(path));
-            } else if(fileType.equals("video")) {
-                VideoView videoView = (VideoView)findViewById(R.id.VideoView);
-                videoView.setVideoPath(path);
-                videoView.seekTo(1000);
-            }*/
 
             setContentView(R.layout.activity_main);
             final GridView gridview = (GridView) findViewById(R.id.gridview);
@@ -106,6 +94,17 @@ public class MainActivity extends ActionBarActivity {
 
                             if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
                                 //if(imageView.getDrawable() != null) {
+                                // Todo: Send image
+                                WifiP2pInfo info = DeviceDetailFragment.getWiFiInfo();
+                                Log.d("info", info.toString());
+
+                                Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
+                                serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                                serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, imgUri.toString());
+                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                                        info.groupOwnerAddress.getHostAddress());
+                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+                                MainActivity.this.startService(serviceIntent);
                                 Toast.makeText(getApplicationContext(),"Down to UP Swipe Performed!",Toast.LENGTH_SHORT).show();
                                 setContentView(R.layout.empty_view);
                                 return true;
@@ -120,6 +119,50 @@ public class MainActivity extends ActionBarActivity {
             // add array of images to ImageAdapter
             myImageAdapter.add(images);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch(id) {
+            case R.id.buttonLoadPicture:
+                Intent buttonLoadPictureIntent = new Intent();
+                buttonLoadPictureIntent.putExtra(Intent.EXTRA_LOCAL_ONLY,true);
+                buttonLoadPictureIntent.setType("image/*");
+                buttonLoadPictureIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                buttonLoadPictureIntent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(buttonLoadPictureIntent, "Select Picture"), RESULT_LOAD_IMAGE);
+                return true;
+            case R.id.showBluetoothPeers:
+                Intent showBluetoothPeersIntent = new Intent(this, BluetoothActivity.class);
+                startActivity(showBluetoothPeersIntent);
+                return true;
+            case R.id.showWiFiPeers:
+                Intent showWiFiPeersIntent = new Intent(this, WiFiDirectActivity.class);
+                startActivity(showWiFiPeersIntent);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /* register the broadcast receiver with the intent values to be matched */
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+    /* unregister the broadcast receiver */
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     public static String getPath(final Context context, final Uri uri) {
@@ -242,50 +285,6 @@ public class MainActivity extends ActionBarActivity {
      */
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        switch(id) {
-            case R.id.buttonLoadPicture:
-                Intent buttonLoadPictureIntent = new Intent();
-                buttonLoadPictureIntent.putExtra(Intent.EXTRA_LOCAL_ONLY,true);
-                buttonLoadPictureIntent.setType("image/*");
-                buttonLoadPictureIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                buttonLoadPictureIntent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(buttonLoadPictureIntent, "Select Picture"), RESULT_LOAD_IMAGE);
-                return true;
-            case R.id.showBluetoothPeers:
-                Intent showBluetoothPeersIntent = new Intent(this, BluetoothActivity.class);
-                startActivity(showBluetoothPeersIntent);
-                return true;
-            case R.id.showWiFiPeers:
-                Intent showWiFiPeersIntent = new Intent(this, WiFiDirectActivity.class);
-                startActivity(showWiFiPeersIntent);
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    /* register the broadcast receiver with the intent values to be matched */
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-    /* unregister the broadcast receiver */
-    @Override
-    protected void onPause() {
-        super.onPause();
     }
 
 }

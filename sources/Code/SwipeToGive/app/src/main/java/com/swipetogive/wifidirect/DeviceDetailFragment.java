@@ -62,7 +62,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private static final int SERVER_PORT = 8988;
     private View mContentView = null;
     private WifiP2pDevice device;
-    private WifiP2pInfo info;
+    public static WifiP2pInfo info;
     ProgressDialog progressDialog = null;
     private ArrayList<InetAddress> clients = new ArrayList<InetAddress>();
     private ServerSocket serverSocket = null;
@@ -73,6 +73,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     Socket socket = new Socket();
     byte buf[]  = new byte[1024];
     private Context context;
+
+    public static WifiP2pInfo getWiFiInfo() {
+        return info;
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -209,7 +213,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.status_text);
         view.setText("");
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
-        Log.d("view-gone", View.GONE + "");
         this.getView().setVisibility(View.GONE);
     }
 
