@@ -18,8 +18,8 @@ package com.swipetogive.wifidirect;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
@@ -36,21 +36,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.swipetogive.MainActivity;
 import com.swipetogive.wifidirect.DeviceListFragment.DeviceActionListener;
 import com.swipetogive.R;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
@@ -59,20 +54,10 @@ import java.util.ArrayList;
 public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
 
     protected static final int CHOOSE_FILE_RESULT_CODE = 20;
-    private static final int SERVER_PORT = 8888;
     private View mContentView = null;
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
-    private ArrayList<InetAddress> clients = new ArrayList<InetAddress>();
-    private ServerSocket serverSocket = null;
-
-    String host;
-    int port;
-    int len;
-    Socket socket = new Socket();
-    byte buf[]  = new byte[1024];
-    private Context context;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -102,8 +87,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 //                                ((DeviceActionListener) getActivity()).cancelDisconnect();
 //                            }
 //                        }
-                );
+                        );
                 ((DeviceActionListener) getActivity()).connect(config);
+
             }
         });
 
@@ -135,7 +121,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        // User has picked an image. Transfer it to group owner i.e peer using FileTransferService.
+        // User has picked an image. Transfer it to group owner i.e peer using
+        // FileTransferService.
         Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
         statusText.setText("Sending: " + uri);
@@ -145,7 +132,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                 info.groupOwnerAddress.getHostAddress());
-        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
         getActivity().startService(serviceIntent);
     }
 
@@ -165,51 +152,21 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         //view = (TextView) mContentView.findViewById(R.id.device_info);
         //view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
 
-        // After the group negotiation, we assign the group owner as the file server.
-        // The file server is single threaded, single connection server socket.
+        // After the group negotiation, we assign the group owner as the file
+        // server. The file server is single threaded, single connection server
+        // socket.
         Log.d("group owner", info.isGroupOwner + "");
         Log.d("group formed", info.groupFormed + "");
 
         if (info.groupFormed && info.isGroupOwner) {
-
-            Log.d("getHostAddress", info.groupOwnerAddress.getHostAddress() + "");
-
-            // create socket and act as server
             new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
             Log.d("owner", "owner");
-
         } else if (info.groupFormed) {
-            // The other device acts as the client. In this case, we enable the get file button.
+            // The other device acts as the client. In this case, we enable the
+            // get file button.
             Log.d("formed", "formed");
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
             ((TextView) mContentView.findViewById(R.id.status_text)).setText("Client");
-
-            try {
-                /**
-                 * Create a client socket with the host, port, and timeout information.
-                 */
-                socket.bind(null);
-                socket.connect((new InetSocketAddress(info.groupOwnerAddress.getHostAddress(), SERVER_PORT)), 500);
-            } catch (IOException e) {
-                //catch logic
-            }
-
-            /**
-             * Clean up any open sockets when done
-             * transferring or if an exception occurred.
-             */
-            finally {
-                if (socket != null) {
-                    if (socket.isConnected()) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            //catch logic
-                        }
-                    }
-                }
-            }
-
         }
 
         // hide the connect button
@@ -218,7 +175,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     /**
      * Updates the UI with device data
-     *
+     * 
      * @param device the device to be displayed
      */
     public void showDetails(WifiP2pDevice device) {
@@ -246,52 +203,30 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
     /**
-     * Class to open a socket, which is execute if Device is acting as serer
+     * A simple server socket that accepts connection and writes some data on
+     * the stream.
      */
-    public static class FileServerAsyncTask extends AsyncTask {
+    public static class FileServerAsyncTask extends AsyncTask<Void, Void, String> {
 
         private Context context;
         private TextView statusText;
 
+        /**
+         * @param context
+         * @param statusText
+         */
         public FileServerAsyncTask(Context context, View statusText) {
             this.context = context;
             this.statusText = (TextView) statusText;
         }
 
-        /**
-         * Start activity that can handle a JPEG image
-         */
         @Override
-        protected void onPostExecute(Object res) {
-            String result = res.toString();
-            if (result != null) {
-                statusText.setText("File copied - " + result);
-                Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + result), "image/*");
-                context.startActivity(intent);
-            }
-        }
-
-        @Override
-        protected Object doInBackground(Object[] params) {
+        protected String doInBackground(Void... params) {
             try {
-
-                /**
-                 * Create a server socket and wait for client connections. This
-                 * call blocks until a connection is accepted from a client
-                 */
-
-                ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
-                Log.d("mySocket", serverSocket.toString());
+                ServerSocket serverSocket = new ServerSocket(8988);
+                Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
                 Socket client = serverSocket.accept();
-
-                /**
-                 * If this code is reached, a client has connected and transferred data
-                 * Save the input stream from the client as a JPEG file
-                 */
-                Log.d("client", "connected");
-                Log.d("client", client.toString());
+                Log.d(WiFiDirectActivity.TAG, "Server: connection done");
                 final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
                         + ".jpg");
@@ -300,6 +235,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 if (!dirs.exists())
                     dirs.mkdirs();
                 f.createNewFile();
+
+                Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
@@ -309,22 +246,53 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 return null;
             }
         }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                statusText.setText("File copied - " + result);
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse("file://" + result), "image/*");
+                context.startActivity(intent);
+            }
+
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onPreExecute()
+         */
+        @Override
+        protected void onPreExecute() {
+            statusText.setText("Opening a server socket");
+        }
+
     }
 
     public static boolean copyFile(InputStream inputStream, OutputStream out) {
         byte buf[] = new byte[1024];
         int len;
+        long startTime=System.currentTimeMillis();
+        
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
-
             }
             out.close();
             inputStream.close();
+            long endTime=System.currentTimeMillis()-startTime;
+            Log.v("","Time taken to transfer all bytes is : "+endTime);
+            
         } catch (IOException e) {
             Log.d(WiFiDirectActivity.TAG, e.toString());
             return false;
         }
         return true;
     }
+
 }

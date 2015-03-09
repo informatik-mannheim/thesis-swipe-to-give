@@ -25,7 +25,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.nfc.Tag;
 import android.util.Log;
 
 import com.swipetogive.R;
@@ -39,8 +38,8 @@ import com.swipetogive.wifidirect.WiFiDirectActivity;
  */
 public class ApplicationBroadcastReceiver extends BroadcastReceiver {
 
-    public WifiP2pManager manager;
-    public Channel channel;
+    private WifiP2pManager manager;
+    private Channel channel;
     private WiFiDirectActivity activity;
 
     /**
@@ -97,13 +96,12 @@ public class ApplicationBroadcastReceiver extends BroadcastReceiver {
 
             if (networkInfo.isConnected()) {
 
-                // we are connected with the other device,
-                // request connection info to find group owner IP
+                // we are connected with the other device, request connection
+                // info to find group owner IP
 
-                DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager()
-                        .findFragmentById(R.id.frag_detail);
+                DeviceDetailFragment fragment = (DeviceDetailFragment) activity
+                        .getFragmentManager().findFragmentById(R.id.frag_detail);
                 manager.requestConnectionInfo(channel, fragment);
-                Log.d(WiFiDirectActivity.TAG, fragment.toString());
             } else {
                 // It's a disconnect
                 activity.resetData();
