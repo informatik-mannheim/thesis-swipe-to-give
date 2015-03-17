@@ -16,7 +16,6 @@
 
 package com.swipetogive.util;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,11 +24,9 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.nfc.Tag;
 import android.util.Log;
 
 import com.swipetogive.R;
-import com.swipetogive.bluetooth.BluetoothActivity;
 import com.swipetogive.wifidirect.DeviceDetailFragment;
 import com.swipetogive.wifidirect.DeviceListFragment;
 import com.swipetogive.wifidirect.WiFiDirectActivity;

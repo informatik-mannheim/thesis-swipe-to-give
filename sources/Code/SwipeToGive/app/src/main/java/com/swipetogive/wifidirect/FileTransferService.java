@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -23,7 +24,7 @@ import java.net.Socket;
 public class FileTransferService extends IntentService {
 
     private static final int SOCKET_TIMEOUT = 5000;
-    public static final String ACTION_SEND_FILE = "com.example.android.wifidirect.SEND_FILE";
+    public static final String ACTION_SEND_FILE = "com.swipetogive.SEND_FILE";
     public static final String EXTRAS_FILE_PATH = "file_url";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
@@ -46,7 +47,7 @@ public class FileTransferService extends IntentService {
         Context context = getApplicationContext();
         Log.d("action", intent.getAction());
         if (intent.getAction().equals(ACTION_SEND_FILE)) {
-            String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
+            ArrayList<String> fileUri = intent.getStringArrayListExtra(EXTRAS_FILE_PATH);
             String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
@@ -57,19 +58,32 @@ public class FileTransferService extends IntentService {
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
                 Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
-                OutputStream stream = socket.getOutputStream();
                 ContentResolver cr = context.getContentResolver();
+                OutputStream stream = socket.getOutputStream();
+                socket.setKeepAlive(true);
                 InputStream is = null;
-                try {
-                    is = cr.openInputStream(Uri.parse(fileUri));
-                } catch (FileNotFoundException e) {
-                    Log.d(WiFiDirectActivity.TAG, e.toString());
-                }
-                DeviceDetailFragment.copyFile(is, stream);
-                Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+                Uri uriToSend;
+
+                    try {
+                        Log.d("fileUri size", fileUri.size() + "");
+                        for (int i = 0; i < fileUri.size(); i++) {
+                            Log.d("i", i + "");
+                            is = cr.openInputStream(uriToSend = Uri.parse(fileUri.get(i)));
+                            DeviceDetailFragment.copyFile(is, stream);
+                            Log.d("uriToSend", uriToSend.toString());
+                        }
+                        fileUri.clear();
+                        is.close();
+                        stream.close();
+                    } catch (FileNotFoundException e) {
+                        Log.d(WiFiDirectActivity.TAG, e.toString());
+                    }
+                    Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             } finally {
+
                 if (socket != null) {
                     if (socket.isConnected()) {
                         try {

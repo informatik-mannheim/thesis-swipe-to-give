@@ -18,8 +18,11 @@ package com.swipetogivereceiver;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.ClipData;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
@@ -30,8 +33,10 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,12 +47,12 @@ import android.widget.TextView;
 import com.swipetogivereceiver.DeviceListFragment.DeviceActionListener;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
@@ -56,10 +61,12 @@ import java.net.Socket;
 public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
 
     protected static final int CHOOSE_FILE_RESULT_CODE = 20;
+    private static final int SERVER_PORT = 8988;
     private View mContentView = null;
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
+    Uri imgUri;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -115,18 +122,38 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
+        ArrayList<String> images = new ArrayList<>();
+
+        if(data.getData()!=null) {
+            imgUri = data.getData();
+            images.add(getPath(getActivity().getApplication(),imgUri));
+        } else if(data.getClipData()!=null){
+            ClipData mClipData=data.getClipData();
+
+            for(int i=0;i<mClipData.getItemCount();i++){
+                ClipData.Item item = mClipData.getItemAt(i);
+                Uri uri = item.getUri();
+                images.add(getPath(getActivity().getApplication(),uri));
+            }
+
+        } else {
+            Log.e("ERR", "No data received!");
+        }
+
+
+        /*
         // User has picked an image. Transfer it to group owner i.e peer using
         // FileTransferService.
         Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
         statusText.setText("Sending: " + uri);
-        Log.d(MainActivity.TAG, "Intent----------- " + uri);
+        Log.d(MainActivity.TAG, "Intent----------- " + uri);*/
         Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
         serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+        serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, images);
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                 info.groupOwnerAddress.getHostAddress());
-        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
         getActivity().startService(serviceIntent);
     }
 
@@ -202,7 +229,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
      */
     public static class FileServerAsyncTask extends AsyncTask<Void, Void, String> {
 
-        private static final int SERVER_PORT = 8988;
         private Context context;
         private TextView statusText;
 
@@ -222,24 +248,15 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(MainActivity.TAG, "Server: Socket opened");
                 Socket client = serverSocket.accept();
                 Log.d(MainActivity.TAG, "Server: connection done");
-                final File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/img_" + System.currentTimeMillis() + ".jpg");
-                //final File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +"/DCIM/Camera/img_" + System.currentTimeMillis() + ".jpg");
 
                 Bitmap bitmap;
                 bitmap = BitmapFactory.decodeStream(client.getInputStream());
-                MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "Image" , "Image from Swipe To Give");
+                Log.d("client.getInputStream()", client.getInputStream().available() + "");
 
-                //File dirs = new File(f.getParent());
-                //if (!dirs.exists())
-                //    dirs.mkdirs();
-                //f.createNewFile();
-
-                //Log.d(MainActivity.TAG, "server: copying files " + f.toString());
-                //InputStream inputstream = client.getInputStream();
-                //copyFile(inputstream, new FileOutputStream(f));
+                MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "Image", "Image from Swipe To Give");
                 serverSocket.close();
-                Log.d("path", f.getAbsolutePath());
-                return f.getAbsolutePath();
+                //return String.valueOf(MediaStore.Images.Media.getBitmap(context.getContentResolver(), Uri.fromFile(f)));
+                return "";
             } catch (IOException e) {
                 Log.e(MainActivity.TAG, e.getMessage());
                 return null;
@@ -275,8 +292,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     }
 
+    /*
     public static boolean copyFile(InputStream inputStream, OutputStream out) {
-        byte buf[] = new byte[1024];
+        Log.d("copyFile", "copy");
+        byte buf[] = new byte[6000];
         int len;
         try {
             while ((len = inputStream.read(buf)) != -1) {
@@ -290,6 +309,118 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             return false;
         }
         return true;
+    }
+    */
+
+
+    public static String getPath(final Context context, final Uri uri) {
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+            // ExternalStorageProvider
+            /*
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+            }
+
+            // DownloadsProvider
+
+            else if (isDownloadsDocument(uri)) {
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            */
+            // MediaProvider
+            if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+
+                switch(type) {
+                    case "image":
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                        break;
+                    case "video":
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                        break;
+                    case "audio":
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                        break;
+                    default:
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is MediaProvider.
+     */
+    public static boolean isMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * Get the value of the data column for this Uri. This is useful for
+     * MediaStore Uris, and other file-based ContentProviders.
+     *
+     * @param context The context.
+     * @param uri The Uri to query.
+     * @param selection (Optional) Filter used in the query.
+     * @param selectionArgs (Optional) Selection arguments used in the query.
+     * @return The value of the _data column, which is typically a file path.
+     */
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
     }
 
 }

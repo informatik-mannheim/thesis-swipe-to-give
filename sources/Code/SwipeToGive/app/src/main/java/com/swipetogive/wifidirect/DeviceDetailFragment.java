@@ -169,8 +169,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
-            out.close();
-            inputStream.close();
         } catch (IOException e) {
             Log.d(WiFiDirectActivity.TAG, e.toString());
             return false;

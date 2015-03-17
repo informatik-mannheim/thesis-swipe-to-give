@@ -74,8 +74,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
             return;
         } else {
             isWifiP2pEnabled = true;
-            WifiInfo currentWifi = wifi.getConnectionInfo();
-            Log.d("networkId", currentWifi.getNetworkId() + "");
         }
 
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()

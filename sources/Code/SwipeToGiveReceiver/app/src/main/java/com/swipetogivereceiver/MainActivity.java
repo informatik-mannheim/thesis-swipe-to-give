@@ -17,7 +17,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-public class MainActivity extends ActionBarActivity implements WifiP2pManager.ChannelListener, DeviceListFragment.DeviceActionListener {
+public class MainActivity extends ActionBarActivity implements WifiP2pManager.ChannelListener,
+        DeviceListFragment.DeviceActionListener {
     public static final String TAG = "SwipeToGiveReceiver";
     private WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
@@ -40,7 +41,6 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
         setContentView(R.layout.activity_main);
 
         // add necessary intent values to be matched.
-
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -194,26 +194,6 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
                     "Severe! Channel is probably lost premanently. Try Disable/Re-Enable P2P.",
                     Toast.LENGTH_LONG).show();
         }
-    }
-
-    public void search() {
-        final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_list);
-        fragment.onInitiateDiscovery();
-        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-
-            @Override
-            public void onSuccess() {
-                Toast.makeText(MainActivity.this, "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                Toast.makeText(MainActivity.this, "Discovery Failed : " + reasonCode,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     @Override

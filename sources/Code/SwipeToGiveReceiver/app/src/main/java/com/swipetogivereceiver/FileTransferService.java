@@ -22,6 +22,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 
 /**
@@ -32,14 +33,14 @@ public class FileTransferService extends IntentService {
 
     private static final int SOCKET_TIMEOUT = 5000;
     public static final String ACTION_SEND_FILE = "com.example.android.wifidirect.SEND_FILE";
-    public static final String EXTRAS_FILE_PATH = "file_url";
+    public static final String EXTRAS_FILE_PATH = "file_path";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
 
     //
     private ServerSocket serverSocket;
     public static String SERVERIP = "10.0.2.15";
-    public static final int SERVERPORT = 8988;
+    public static final int SERVER_PORT = 8988;
     private Handler handler = new Handler();
 
     @Override
@@ -49,8 +50,8 @@ public class FileTransferService extends IntentService {
         SERVERIP = getLocalIpAddress();
         Log.d("ServerIP", SERVERIP);
 
-        Thread fst = new Thread(new ServerThread());
-        fst.start();
+        Thread serverThread = new Thread(new ServerThread());
+        serverThread.start();
     }
 
     public class ServerThread implements Runnable {
@@ -64,7 +65,7 @@ public class FileTransferService extends IntentService {
                             Log.d("Listening on IP", SERVERIP + "");
                         }
                     });
-                    serverSocket = new ServerSocket(SERVERPORT);
+                    serverSocket = new ServerSocket(SERVER_PORT);
                     while (true) {
                         // LISTEN FOR INCOMING CLIENTS
                         Socket client = serverSocket.accept();
@@ -162,17 +163,18 @@ public class FileTransferService extends IntentService {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
 
-                Log.d(MainActivity.TAG, "Client socket - " + socket.isConnected());
                 OutputStream stream = socket.getOutputStream();
                 ContentResolver cr = context.getContentResolver();
                 InputStream is = null;
+
                 try {
                     is = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
                     Log.d(MainActivity.TAG, e.toString());
                 }
-                DeviceDetailFragment.copyFile(is, stream);
-                Log.d(MainActivity.TAG, "Client: Data written");
+                //DeviceDetailFragment.copyFile(is, stream);
+                Log.d(MainActivity.TAG, "Client: datas written");
+
             } catch (IOException e) {
                 Log.e(MainActivity.TAG, e.getMessage());
             } finally {

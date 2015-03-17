@@ -91,6 +91,10 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         ((DeviceActionListener) getActivity()).showDetails(device);
     }
 
+    public void updateThisDevice(WifiP2pDevice parcelableExtra) {
+
+    }
+
     /**
      * Array adapter for ListFragment that maintains WifiP2pDevice list.
      */
@@ -133,19 +137,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         }
     }
 
-    /**
-     * Update UI for this device.
-     * 
-     * @param device WifiP2pDevice object
-     */
-    public void updateThisDevice(WifiP2pDevice device) {
-        /*this.device = device;
-        TextView view = (TextView) mContentView.findViewById(R.id.my_name);
-        view.setText(device.deviceName);
-        view = (TextView) mContentView.findViewById(R.id.my_status);
-        view.setText(getDeviceStatus(device.status));*/
-    }
-
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peerList) {
         peers.clear();
@@ -168,8 +159,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
     }
 
     /**
-     * An interface-callback for the activity to listen to fragment interaction
-     * events.
+     * An interface-callback for the activity to listen to fragment interaction events.
      */
     public interface DeviceActionListener {
 

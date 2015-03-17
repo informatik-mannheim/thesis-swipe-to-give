@@ -32,10 +32,13 @@ public class MainActivity extends ActionBarActivity {
 
     private static final int RESULT_LOAD_IMAGE = 1;
     private static final int SWIPE_MIN_DISTANCE = 450;
+    private static final int SERVER_PORT = 8988;
 
     float y1,y2;
     ImageAdapter myImageAdapter;
     Uri imgUri;
+    ArrayList<String> imagesForGui = new ArrayList<>();
+    ArrayList<String> imagesForTransfer = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,27 +50,27 @@ public class MainActivity extends ActionBarActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        ArrayList<String> images = new ArrayList<>();
+
 
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == -1) {
+            imagesForGui.clear();
 
             if(data.getData()!=null) {
                 imgUri = data.getData();
-                Log.d("path", imgUri.getLastPathSegment());
 
-                String path = getPath(this,imgUri);
-                images.add(path);
+                imagesForTransfer.add(imgUri.toString());
+                imagesForGui.add(getPath(this, imgUri));
             } else if(data.getClipData()!=null){
                 ClipData mClipData=data.getClipData();
-
+                imagesForTransfer.clear();
                 for(int i=0;i<mClipData.getItemCount();i++){
                     ClipData.Item item = mClipData.getItemAt(i);
                     Uri uri = item.getUri();
-                    String tempPath = getPath(this,uri);
-                    images.add(tempPath);
+                    Log.d("img", uri.toString());
+                    imagesForTransfer.add(uri.toString());
+                    imagesForGui.add(getPath(this, uri));
                 }
 
-                Log.v("LOG_TAG", "Selected Images: "+ mClipData.getItemCount());
             } else {
                 Log.e("ERR", "No data received!");
             }
@@ -93,18 +96,17 @@ public class MainActivity extends ActionBarActivity {
                             float length = Math.abs(y2 - y1);
 
                             if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
-                                //if(imageView.getDrawable() != null) {
                                 WifiP2pInfo info = DeviceDetailFragment.getWiFiInfo();
-                                Log.d("info", info.toString());
 
                                 Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
                                 serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                                serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, imgUri.toString());
+                                serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForTransfer);
                                 serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                                         info.groupOwnerAddress.getHostAddress());
-                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
 
                                 MainActivity.this.startService(serviceIntent);
+
                                 Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
 
                                 setContentView(R.layout.empty_view);
@@ -118,7 +120,7 @@ public class MainActivity extends ActionBarActivity {
             });
 
             // add array of images to ImageAdapter
-            myImageAdapter.add(images);
+            myImageAdapter.add(imagesForGui);
         }
     }
 
