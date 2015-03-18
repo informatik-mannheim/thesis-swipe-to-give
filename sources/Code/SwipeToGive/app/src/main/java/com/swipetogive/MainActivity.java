@@ -100,7 +100,7 @@ public class MainActivity extends ActionBarActivity {
 
                                 Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
                                 serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                                serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForTransfer);
+                                serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForGui);
                                 serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                                         info.groupOwnerAddress.getHostAddress());
                                 serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
@@ -291,4 +291,3 @@ public class MainActivity extends ActionBarActivity {
     }
 
 }
-

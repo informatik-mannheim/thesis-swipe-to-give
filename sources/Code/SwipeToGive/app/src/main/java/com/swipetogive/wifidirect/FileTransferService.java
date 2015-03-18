@@ -9,6 +9,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,36 +58,53 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
+            Uri uri;
+            ArrayList<File> files = new ArrayList<>();
+
+            for(int i = 0; i < fileUri.size(); i++) {
+                uri = Uri.parse(fileUri.get(i));
+                files.add(new File(uri.getPath()));
+            }
+
             try {
-                Log.d(WiFiDirectActivity.TAG, "Opening client socket - ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-
                 Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
-                ContentResolver cr = context.getContentResolver();
-                OutputStream stream = socket.getOutputStream();
-                socket.setKeepAlive(true);
-                InputStream is = null;
-                Uri uriToSend;
 
-                    try {
-                        Log.d("fileUri size", fileUri.size() + "");
-                        for (int i = 0; i < fileUri.size(); i++) {
-                            Log.d("i", i + "");
-                            is = cr.openInputStream(uriToSend = Uri.parse(fileUri.get(i)));
-                            DeviceDetailFragment.copyFile(is, stream);
-                            Log.d("uriToSend", uriToSend.toString());
-                        }
-                        fileUri.clear();
-                        is.close();
-                        stream.close();
-                    } catch (FileNotFoundException e) {
-                        Log.d(WiFiDirectActivity.TAG, e.toString());
+                DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                System.out.println(files.size());
+
+                //write the number of files to the server
+                dataOutputStream.writeInt(files.size());
+                dataOutputStream.flush();
+
+                // write file names
+                for(int i = 0; i < files.size(); i++){
+                    dataOutputStream.writeUTF(files.get(i).getName());
+                    dataOutputStream.writeLong(files.get(i).length());
+                    Log.d("fileSize", files.get(i).length() + "");
+                    dataOutputStream.flush();
+                }
+
+                byte [] buffer = new byte[1024];
+                int n = 0;
+
+                // outer loop, executes one for each file
+                 for(int i =0; i < files.size(); i++){
+
+                    System.out.println(files.get(i).getName());
+                    // create new fileinputstream for each file
+                    FileInputStream fileInputStream = new FileInputStream(files.get(i));
+
+                    //write file to dos
+                    while((n = fileInputStream.read(buffer)) != -1){
+                        dataOutputStream.write(buffer,0,n);
+                        dataOutputStream.flush();
                     }
-                    Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+                }
 
             } catch (IOException e) {
-                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                //Log.e(WiFiDirectActivity.TAG, e.getMessage());
             } finally {
 
                 if (socket != null) {
