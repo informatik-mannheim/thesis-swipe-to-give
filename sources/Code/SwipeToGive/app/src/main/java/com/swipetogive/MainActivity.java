@@ -50,8 +50,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-
-
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == -1) {
             imagesForGui.clear();
 
@@ -60,7 +58,7 @@ public class MainActivity extends ActionBarActivity {
 
                 imagesForTransfer.add(imgUri.toString());
                 imagesForGui.add(getPath(this, imgUri));
-            } else if(data.getClipData()!=null){
+            } else if(data.getClipData()!=null) {
                 ClipData mClipData=data.getClipData();
                 imagesForTransfer.clear();
                 for(int i=0;i<mClipData.getItemCount();i++){
@@ -74,6 +72,8 @@ public class MainActivity extends ActionBarActivity {
             } else {
                 Log.e("ERR", "No data received!");
             }
+
+            System.out.println("gui " + imagesForGui);
 
             setContentView(R.layout.activity_main);
             final GridView gridview = (GridView) findViewById(R.id.gridview);
