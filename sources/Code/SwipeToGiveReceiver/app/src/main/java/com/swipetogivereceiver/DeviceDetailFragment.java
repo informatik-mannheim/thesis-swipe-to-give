@@ -20,6 +20,7 @@ import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -29,6 +30,7 @@ import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -94,7 +96,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     }
                 });
 
-        mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
+        /*mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
                 new View.OnClickListener() {
 
                     @Override
@@ -106,7 +108,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
                     }
                 });
-
+        */
         return mContentView;
     }
 
@@ -216,16 +218,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 for(int i = 0; i < files.size();i++){
 
                     long fileSize = fileLength[i];
-                    int test = (int) fileSize;
-
                     byte[]buf = new byte[1024];
 
-                    System.out.println(fileSize + "\n" + test + "\n" + buf.length);
-                    System.out.println("Receiving file: " + files.get(i).getName());
-
                     //create a new fileoutputstream for each new file -- create a empty file
-                    FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/" + files.get(i).getName());
-
+                    String path = Environment.getExternalStorageDirectory() + "/DCIM/Camera/" + files.get(i).getName();
+                    FileOutputStream fos = new FileOutputStream(path);
                     int n = 0;
 
                     while (fileSize > 0 && (n = dis.read(buf, 0, (int)Math.min(buf.length, fileSize))) != -1)
@@ -233,12 +230,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         fos.write(buf,0,n);
                         fileSize -= n;
                     }
-
-                    Log.d("Übertragung", "Fertig");
+                    refreshDir(path);
 
                     fos.close();
                 }
 
+                Log.d("Übertragung", "Fertig");
 
                 /*
                 Bitmap bitmap;
@@ -254,6 +251,17 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.e(MainActivity.TAG, e.getMessage());
                 return null;
             }
+        }
+
+        private void refreshDir(String path) {
+            MediaScannerConnection.scanFile(context, new String[] { path },
+                    null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        @Override
+                        public void onScanCompleted(String path, Uri uri) {
+
+                        }
+                    });
         }
 
         private void setFilenamesAndFileSizes(int number, ArrayList<File> files, long[] fileLength, DataInputStream dis) {
