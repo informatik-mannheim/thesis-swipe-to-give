@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Build;
 import android.os.Environment;
@@ -44,6 +45,11 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.empty_view);
+
+        WifiManager wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        if (!wifi.isWifiEnabled()){
+            wifi.setWifiEnabled(true);
+        }
     }
 
     @Override
@@ -64,7 +70,6 @@ public class MainActivity extends ActionBarActivity {
                 for(int i=0;i<mClipData.getItemCount();i++){
                     ClipData.Item item = mClipData.getItemAt(i);
                     Uri uri = item.getUri();
-                    Log.d("img", uri.toString());
                     imagesForTransfer.add(uri.toString());
                     imagesForGui.add(getPath(this, uri));
                 }
@@ -96,21 +101,29 @@ public class MainActivity extends ActionBarActivity {
                             float length = Math.abs(y2 - y1);
 
                             if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
-                                WifiP2pInfo info = DeviceDetailFragment.getWiFiInfo();
 
-                                Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
-                                serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                                serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForGui);
-                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                                        info.groupOwnerAddress.getHostAddress());
-                                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
+                                WifiP2pInfo info;
+                                if(DeviceDetailFragment.getWiFiInfo() == null) {
+                                    Toast.makeText(getApplicationContext(), "No Connection. " +
+                                            "Please connect to a device", Toast.LENGTH_LONG).show();
+                                    startWiFiDirectActivity();
+                                } else {
+                                    info = DeviceDetailFragment.getWiFiInfo();
 
-                                MainActivity.this.startService(serviceIntent);
+                                    Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
+                                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                                    serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForGui);
+                                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                                            info.groupOwnerAddress.getHostAddress());
+                                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
 
-                                Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
+                                    MainActivity.this.startService(serviceIntent);
 
-                                setContentView(R.layout.empty_view);
-                                return true;
+                                    Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
+
+                                    setContentView(R.layout.empty_view);
+                                    return true;
+                                }
                             }
                             break;
                         }
@@ -149,12 +162,16 @@ public class MainActivity extends ActionBarActivity {
                 startActivity(showBluetoothPeersIntent);
                 return true;
             case R.id.showWiFiPeers:
-                Intent showWiFiPeersIntent = new Intent(this, WiFiDirectActivity.class);
-                startActivity(showWiFiPeersIntent);
+                startWiFiDirectActivity();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startWiFiDirectActivity() {
+        Intent showWiFiPeersIntent = new Intent(this, WiFiDirectActivity.class);
+        startActivity(showWiFiPeersIntent);
     }
 
     /* register the broadcast receiver with the intent values to be matched */

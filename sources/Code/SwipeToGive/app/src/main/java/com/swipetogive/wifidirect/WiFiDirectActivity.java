@@ -31,7 +31,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
 
     public static final String TAG = "wifidirectdemo";
     public WifiP2pManager manager;
-    private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
 
     private final IntentFilter intentFilter = new IntentFilter();
@@ -40,24 +39,13 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
 
     private static Context context;
 
-    /**
-     * @param isWifiP2pEnabled the isWifiP2pEnabled to set
-     */
-    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
-        this.isWifiP2pEnabled = isWifiP2pEnabled;
-    }
-
-    public static Context getAppContext() {
-        return context;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wifi_direct);
 
         context = getApplicationContext();
-        getSupportActionBar().setTitle("WiFi Devices");
+        getSupportActionBar().setTitle("WiFi Direct Devices");
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -67,15 +55,9 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
 
-        WifiManager wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-        if (!wifi.isWifiEnabled()){
-            isWifiP2pEnabled = false;
-            Toast.makeText(WiFiDirectActivity.this, "WiFi is off", Toast.LENGTH_SHORT).show();
-            return;
-        } else {
-            isWifiP2pEnabled = true;
-        }
+        checkWiFiState();
 
+        Log.d("search", "started");
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_list);
         fragment.onInitiateDiscovery();
@@ -83,8 +65,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
 
             @Override
             public void onSuccess() {
-                Toast.makeText(WiFiDirectActivity.this, "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -95,10 +75,18 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         });
     }
 
+    private void checkWiFiState() {
+        WifiManager wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        if (!wifi.isWifiEnabled()){
+            wifi.setWifiEnabled(true);
+        }
+    }
+
     /** register the BroadcastReceiver with the intent values to be matched */
     @Override
     public void onResume() {
         super.onResume();
+        checkWiFiState();
         receiver = new ApplicationBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
     }
@@ -107,6 +95,10 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
     public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
+    }
+
+    public static Context getAppContext() {
+        return context;
     }
 
     /**
@@ -128,51 +120,7 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.action_items, menu);
         return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.atn_direct_enable:
-                if (manager != null && channel != null) {
-                    startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                } else {
-                    Log.e(TAG, "channel or manager is null");
-                }
-                return true;
-            case R.string.action_search:
-                if (!isWifiP2pEnabled) {
-                    Toast.makeText(this, "WiFi is off", Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-                final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
-                        .findFragmentById(R.id.frag_list);
-                fragment.onInitiateDiscovery();
-                manager.discoverPeers(channel, new ActionListener() {
-
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(WiFiDirectActivity.this, "Discovery Initiated",
-                                Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(int reasonCode) {
-                        Toast.makeText(WiFiDirectActivity.this, "Discovery Failed : " + reasonCode,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
@@ -189,7 +137,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
             @Override
             public void onSuccess() {
                 // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
-                Log.d("connection", "success");
             }
 
             @Override
@@ -270,11 +217,5 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
                 });
             }
         }
-
-    }
-
-    public boolean getIsWifiP2pEnabled() {
-
-        return isWifiP2pEnabled;
     }
 }

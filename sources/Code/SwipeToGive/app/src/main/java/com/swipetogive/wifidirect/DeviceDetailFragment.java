@@ -153,7 +153,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void resetViews() {
         mContentView.findViewById(R.id.btn_connect).setVisibility(View.VISIBLE);
         TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-        view.setText("leer1");
+        view.setText("");
         view = (TextView) mContentView.findViewById(R.id.group_owner);
         view.setText("");
         view = (TextView) mContentView.findViewById(R.id.status_text);
