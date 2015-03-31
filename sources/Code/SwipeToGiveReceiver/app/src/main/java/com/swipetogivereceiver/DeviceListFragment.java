@@ -91,10 +91,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         ((DeviceActionListener) getActivity()).showDetails(device);
     }
 
-    public void updateThisDevice(WifiP2pDevice parcelableExtra) {
-
-    }
-
     /**
      * Array adapter for ListFragment that maintains WifiP2pDevice list.
      */
@@ -147,7 +143,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
             Log.d("log", "No devices found");
             return;
         }
-
     }
 
     public void clearPeers() {
