@@ -1,7 +1,6 @@
 package com.swipetogivereceiver;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.View;
@@ -12,13 +11,21 @@ import android.widget.ImageView;
 
 import java.util.ArrayList;
 
+/**
+ * Created by Alex on 12.02.2015.
+ */
+
 public class ImageAdapter extends BaseAdapter {
 
     private Context mContext;
-    ArrayList<String> itemList = new ArrayList<>();
+    ArrayList<String> itemList = new ArrayList<String>();
 
     public ImageAdapter(Context c) {
         mContext = c;
+    }
+
+    void add(String path){
+        itemList.add(path);
     }
 
     void add(ArrayList<String> image){
@@ -61,7 +68,7 @@ public class ImageAdapter extends BaseAdapter {
     }
     public Bitmap decodeSampledBitmapFromUri(String path, int reqWidth, int reqHeight) {
 
-        Bitmap bm;
+        Bitmap bm = null;
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;

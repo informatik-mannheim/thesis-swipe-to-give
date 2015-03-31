@@ -101,6 +101,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         ((DeviceActionListener) getActivity()).disconnect();
                     }
                 });
+
+        /*mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        // Allow user to pick an image from Gallery or other
+                        // registered apps
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("image/*");
+                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                    }
+                });
+        */
         return mContentView;
     }
 
@@ -170,6 +184,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         this.getView().setVisibility(View.GONE);
     }
 
+    public void test() {
+
+    }
+
     /**
      * A simple server socket that accepts connection and writes some data on
      * the stream.
@@ -200,7 +218,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                 //read the number of files from the client
                 int number = dis.readInt();
-
                 files = new ArrayList<File>(number);
                 long [] fileLength = new long[number];
 
@@ -230,12 +247,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d("Transfer", "End");
 
                 return "";
-
             } catch (IOException e) {
                 Log.e(MainActivity.TAG, e.getMessage());
                 return null;
             }
-
         }
 
         private void refreshDir(String path) {
@@ -270,9 +285,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         protected void onPostExecute(String result) {
             if (result != null) {
                 statusText.setText("File copied");
-                if(files != null)
-                    listFiles(context, files, PATH);
             }
+            listFiles(context, files, PATH);
         }
 
         /*

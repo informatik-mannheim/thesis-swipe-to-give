@@ -1,23 +1,23 @@
 package com.swipetogivereceiver;
 
-import android.content.Context;
 import android.content.Intent;
-import android.os.Vibrator;
+import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.support.v7.internal.widget.AdapterViewCompat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
+
 public class GridActivity extends ActionBarActivity {
 
     public static ImageAdapter myImageAdapter;
+    private ArrayList<Uri> files = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,21 +35,7 @@ public class GridActivity extends ActionBarActivity {
         gridview.setAdapter(myImageAdapter);
         myImageAdapter.notifyDataSetChanged();
 
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                Intent galleryIntent = new Intent(Intent.ACTION_VIEW, android.provider.MediaStore.
-                        Images.Media.EXTERNAL_CONTENT_URI);
-                startActivity(galleryIntent);
-            }
-        });
-
         myImageAdapter.add(fileUri);
-        Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-        v.vibrate(500);
-        v.vibrate(500);
     }
 
     @Override
@@ -73,5 +59,4 @@ public class GridActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
 }

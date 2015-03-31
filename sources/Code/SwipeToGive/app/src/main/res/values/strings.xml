@@ -6,8 +6,10 @@
     <string name="choose_file">Select a file</string>
     <string name="empty_view">No images selected</string>
     <string name="show_wifi_peers">Show WiFi Devices</string>
+    <string name="show_ble_peers">Show Bluetooth Devices</string>
 
     <!-- Bluetooth -->
+    <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>
     <string name="label_device_address">Device address:</string>
     <string name="label_state">State:</string>

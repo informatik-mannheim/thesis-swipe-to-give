@@ -18,24 +18,40 @@ package com.swipetogive.wifidirect;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.swipetogive.MainActivity;
 import com.swipetogive.wifidirect.DeviceListFragment.DeviceActionListener;
 import com.swipetogive.R;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
@@ -97,7 +113,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // The owner IP is now known.
         TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
-        view.setText("Group Owner" + ((info.isGroupOwner) ? "Yes" : "No"));
+        view.setText("Group Owner" + ((info.isGroupOwner == true) ? "Yes" : "No"));
 
         // After the group negotiation, we assign the group owner as the file server.
         // The file server is single threaded, single connection server socket.
@@ -144,5 +160,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view.setText("");
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
         this.getView().setVisibility(View.GONE);
+    }
+
+    public static boolean copyFile(InputStream inputStream, OutputStream out) {
+        byte buf[] = new byte[1024];
+        int len;
+        try {
+            while ((len = inputStream.read(buf)) != -1) {
+                out.write(buf, 0, len);
+            }
+        } catch (IOException e) {
+            Log.d(WiFiDirectActivity.TAG, e.toString());
+            return false;
+        }
+        return true;
     }
 }
