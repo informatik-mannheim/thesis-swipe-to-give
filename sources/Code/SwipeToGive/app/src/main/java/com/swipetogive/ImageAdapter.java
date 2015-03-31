@@ -1,11 +1,7 @@
 package com.swipetogive;
 
-import java.io.File;
 import java.util.ArrayList;
 
-import android.os.Bundle;
-import android.os.Environment;
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,23 +10,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
-
-/**
- * Created by Alex on 12.02.2015.
- */
 
 public class ImageAdapter extends BaseAdapter {
 
     private Context mContext;
-    ArrayList<String> itemList = new ArrayList<String>();
+    ArrayList<String> itemList = new ArrayList<>();
 
     public ImageAdapter(Context c) {
         mContext = c;
-    }
-
-    void add(String path){
-        itemList.add(path);
     }
 
     void add(ArrayList<String> image){
@@ -73,7 +60,7 @@ public class ImageAdapter extends BaseAdapter {
     }
     public Bitmap decodeSampledBitmapFromUri(String path, int reqWidth, int reqHeight) {
 
-        Bitmap bm = null;
+        Bitmap bm;
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;

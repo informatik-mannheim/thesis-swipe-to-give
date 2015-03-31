@@ -5,6 +5,10 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -24,7 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
-import com.swipetogive.bluetooth.BluetoothActivity;
 import com.swipetogive.wifidirect.DeviceDetailFragment;
 import com.swipetogive.wifidirect.FileTransferService;
 import com.swipetogive.wifidirect.WiFiDirectActivity;
@@ -157,10 +160,6 @@ public class MainActivity extends ActionBarActivity {
                 buttonLoadPictureIntent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(buttonLoadPictureIntent, "Select Picture"), RESULT_LOAD_IMAGE);
                 return true;
-            case R.id.showBluetoothPeers:
-                Intent showBluetoothPeersIntent = new Intent(this, BluetoothActivity.class);
-                startActivity(showBluetoothPeersIntent);
-                return true;
             case R.id.showWiFiPeers:
                 startWiFiDirectActivity();
                 return true;
@@ -179,6 +178,7 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
     }
+
     /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
