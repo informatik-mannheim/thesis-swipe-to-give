@@ -4,6 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -21,24 +26,22 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
         DeviceListFragment.DeviceActionListener {
     public static final String TAG = "SwipeToGiveReceiver";
     private WifiP2pManager manager;
-    private boolean isWifiP2pEnabled = false;
     private boolean retryChannel = false;
 
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
-
-    /**
-     * @param isWifiP2pEnabled the isWifiP2pEnabled to set
-     */
-    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
-        this.isWifiP2pEnabled = isWifiP2pEnabled;
-    }
+    private WifiManager wifi;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        wifi = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        if (!wifi.isWifiEnabled()){
+            wifi.setWifiEnabled(true);
+        }
 
         // add necessary intent values to be matched.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -48,6 +51,7 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
+
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -71,20 +75,11 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings:
                 if (manager != null && channel != null) {
-
-                    // Since this is the system wireless settings activity, it's
-                    // not going to send us a result. We will be notified by
-                    // WiFiDeviceBroadcastReceiver instead.
-
                     startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 } else {
                     Log.e(TAG, "channel or manager is null");
@@ -92,8 +87,8 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
                 return true;
 
             case R.id.action_search:
-                if (!isWifiP2pEnabled) {
-                    Toast.makeText(this, "WiFi is off", Toast.LENGTH_SHORT).show();
+                if (!wifi.isWifiEnabled()) {
+                    wifi.setWifiEnabled(true);
                     return true;
                 }
                 final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
@@ -103,8 +98,6 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
 
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "Discovery Initiated",
-                                Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -232,4 +225,5 @@ public class MainActivity extends ActionBarActivity implements WifiP2pManager.Ch
         }
 
     }
+
 }

@@ -14,32 +14,36 @@
  * limitations under the License.
  */
 
-package com.swipetogivereceiver;
+package com.swipetogive.wifidirect;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
+import android.util.Log;
+
+import com.swipetogive.R;
 
 /**
  * A BroadcastReceiver that notifies of important wifi p2p events.
  */
-public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
+public class ApplicationBroadcastReceiver extends BroadcastReceiver {
 
-    private WifiP2pManager manager;
-    private Channel channel;
-    private MainActivity activity;
+    public WifiP2pManager manager;
+    public Channel channel;
+    private WiFiDirectActivity activity;
 
     /**
      * @param manager WifiP2pManager system service
      * @param channel Wifi p2p channel
      * @param activity activity associated with the receiver
      */
-    public WiFiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel,
-                                       MainActivity activity) {
+    public ApplicationBroadcastReceiver(WifiP2pManager manager, Channel channel,
+                                        WiFiDirectActivity activity) {
         super();
         this.manager = manager;
         this.channel = channel;
@@ -54,6 +58,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
+
         switch (action) {
             case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
 
@@ -62,6 +67,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 if (state != WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
                     activity.resetData();
                 }
+
                 break;
             case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
 
@@ -83,17 +89,30 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
                 if (networkInfo.isConnected()) {
 
-                    // we are connected with the other device, request connection
-                    // info to find group owner IP
-                    DeviceDetailFragment fragment = (DeviceDetailFragment) activity
-                            .getFragmentManager().findFragmentById(R.id.frag_detail);
+                    // we are connected with the other device,
+                    // request connection info to find group owner IP
+
+                    DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager()
+                            .findFragmentById(R.id.frag_detail);
                     manager.requestConnectionInfo(channel, fragment);
+                    Log.d(WiFiDirectActivity.TAG, fragment.toString());
                 } else {
                     // It's a disconnect
                     activity.resetData();
                 }
                 break;
             case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+
+                if (manager != null) {
+                    manager.requestPeers(channel, (PeerListListener) activity.getFragmentManager()
+                            .findFragmentById(R.id.frag_list));
+                }
+
+                DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager()
+                        .findFragmentById(R.id.frag_list);
+                fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(
+                        WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
+
                 break;
         }
     }
