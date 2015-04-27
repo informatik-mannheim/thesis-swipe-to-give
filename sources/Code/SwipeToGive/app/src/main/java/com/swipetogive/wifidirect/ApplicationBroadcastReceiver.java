@@ -91,7 +91,6 @@ public class ApplicationBroadcastReceiver extends BroadcastReceiver {
 
                     // we are connected with the other device,
                     // request connection info to find group owner IP
-
                     DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager()
                             .findFragmentById(R.id.frag_detail);
                     manager.requestConnectionInfo(channel, fragment);
@@ -112,7 +111,6 @@ public class ApplicationBroadcastReceiver extends BroadcastReceiver {
                         .findFragmentById(R.id.frag_list);
                 fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(
                         WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
-
                 break;
         }
     }

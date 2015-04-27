@@ -33,10 +33,6 @@ import android.widget.TextView;
 import com.swipetogive.wifidirect.DeviceListFragment.DeviceActionListener;
 import com.swipetogive.R;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 /**
  * A fragment that manages a particular peer and allows interaction with device
  * i.e. setting up network connection and transferring data.
@@ -101,18 +97,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // After the group negotiation, we assign the group owner as the file server.
         // The file server is single threaded, single connection server socket.
-        Log.d("group owner", info.isGroupOwner + "");
-        Log.d("group formed", info.groupFormed + "");
-
         if (info.groupFormed && info.isGroupOwner) {
             //Todo: Delete group, reconnect
 
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we go back to MainActivity
             // Todo: back to MainActivity
-
-            //mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            //((TextView) mContentView.findViewById(R.id.status_text)).setText("Client");
         }
 
         // hide the connect button

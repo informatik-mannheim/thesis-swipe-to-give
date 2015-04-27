@@ -5,10 +5,6 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -81,8 +77,6 @@ public class MainActivity extends ActionBarActivity {
                 Log.e("ERR", "No data received!");
             }
 
-            System.out.println("gui " + imagesForGui);
-
             setContentView(R.layout.activity_main);
             final GridView gridview = (GridView) findViewById(R.id.gridview);
             myImageAdapter = new ImageAdapter(this);
@@ -100,34 +94,9 @@ public class MainActivity extends ActionBarActivity {
                         }
                         case MotionEvent.ACTION_UP: {
                             y2 = event.getY();
-
                             float length = Math.abs(y2 - y1);
 
-                            if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
-
-                                WifiP2pInfo info;
-                                if(DeviceDetailFragment.getWiFiInfo() == null) {
-                                    Toast.makeText(getApplicationContext(), "No Connection. " +
-                                            "Please connect to a device", Toast.LENGTH_LONG).show();
-                                    startWiFiDirectActivity();
-                                } else {
-                                    info = DeviceDetailFragment.getWiFiInfo();
-
-                                    Intent serviceIntent = new Intent(MainActivity.this, FileTransferService.class);
-                                    serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-                                    serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForGui);
-                                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                                            info.groupOwnerAddress.getHostAddress());
-                                    serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
-
-                                    MainActivity.this.startService(serviceIntent);
-
-                                    Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
-
-                                    setContentView(R.layout.empty_view);
-                                    return true;
-                                }
-                            }
+                            if (detectSwipe(length)) return true;
                             break;
                         }
                     }
@@ -138,6 +107,34 @@ public class MainActivity extends ActionBarActivity {
             // add array of images to ImageAdapter
             myImageAdapter.add(imagesForGui);
         }
+    }
+
+    private boolean detectSwipe(float length) {
+        if (y1 > y2 && length >= SWIPE_MIN_DISTANCE) {
+            WifiP2pInfo info;
+            if(DeviceDetailFragment.getWiFiInfo() == null) {
+                Toast.makeText(getApplicationContext(), "No Connection. " +
+                        "Please connect to a device", Toast.LENGTH_LONG).show();
+                startWiFiDirectActivity();
+            } else {
+                info = DeviceDetailFragment.getWiFiInfo();
+
+                Intent serviceIntent = new Intent(this, FileTransferService.class);
+                serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+                serviceIntent.putStringArrayListExtra(FileTransferService.EXTRAS_FILE_PATH, imagesForGui);
+                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                        info.groupOwnerAddress.getHostAddress());
+                serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, SERVER_PORT);
+
+                this.startService(serviceIntent);
+
+                Toast.makeText(getApplicationContext(),"Success!",Toast.LENGTH_SHORT).show();
+
+                setContentView(R.layout.empty_view);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

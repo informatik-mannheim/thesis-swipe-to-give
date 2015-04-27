@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -64,42 +65,15 @@ public class FileTransferService extends IntentService {
             try {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
 
                 DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                System.out.println(files.size());
 
-                //write the number of files to the server
-                dataOutputStream.writeInt(files.size());
-                dataOutputStream.flush();
-
-                // write file names
-                for(int i = 0; i < files.size(); i++){
-                    dataOutputStream.writeUTF(files.get(i).getName());
-                    dataOutputStream.writeLong(files.get(i).length());
-                    Log.d("fileSize", files.get(i).length() + "");
-                    dataOutputStream.flush();
-                }
-
+                sendFileNamesAndFileSizes(files, dataOutputStream);
                 byte [] buffer = new byte[1024];
-                int n = 0;
-
-                // outer loop, executes one for each file
-                 for(int i =0; i < files.size(); i++){
-
-                    System.out.println(files.get(i).getName());
-                    // create new fileinputstream for each file
-                    FileInputStream fileInputStream = new FileInputStream(files.get(i));
-
-                    //write file to dos
-                    while((n = fileInputStream.read(buffer)) != -1){
-                        dataOutputStream.write(buffer,0,n);
-                        dataOutputStream.flush();
-                    }
-                }
-
+                sendFiles(files, dataOutputStream, buffer);
             } catch (IOException e) {
-                //Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                Toast.makeText(context,e.getMessage(),Toast.LENGTH_SHORT).show();
+                Log.e(WiFiDirectActivity.TAG, e.getMessage());
             } finally {
 
                 if (socket != null) {
@@ -113,7 +87,36 @@ public class FileTransferService extends IntentService {
                     }
                 }
             }
+        }
+    }
 
+    private void sendFiles(ArrayList<File> files, DataOutputStream dataOutputStream, byte[] buffer) throws IOException {
+        int n = 0;
+        // outer loop, executes one for each file
+        for(int i =0; i < files.size(); i++){
+
+            System.out.println(files.get(i).getName());
+            // create new fileinputstream for each file
+            FileInputStream fileInputStream = new FileInputStream(files.get(i));
+
+            //write file to dos
+            while((n = fileInputStream.read(buffer)) != -1){
+                dataOutputStream.write(buffer,0,n);
+                dataOutputStream.flush();
+            }
+        }
+    }
+
+    private void sendFileNamesAndFileSizes(ArrayList<File> files, DataOutputStream dataOutputStream) throws IOException {
+        //write the number of files to the server
+        dataOutputStream.writeInt(files.size());
+        dataOutputStream.flush();
+
+        // write file names
+        for(int i = 0; i < files.size(); i++){
+            dataOutputStream.writeUTF(files.get(i).getName());
+            dataOutputStream.writeLong(files.get(i).length());
+            dataOutputStream.flush();
         }
     }
 }

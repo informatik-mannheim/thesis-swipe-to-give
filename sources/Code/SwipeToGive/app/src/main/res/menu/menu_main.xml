@@ -4,5 +4,5 @@
     <item android:id="@+id/buttonLoadPicture" android:title="@string/choose_file"
         android:orderInCategory="100" app:showAsAction="ifRoom|withText" />
     <item android:id="@+id/showWiFiPeers" android:title="@string/show_wifi_peers"
-        android:orderInCategory="101" app:showAsAction="ifRoom|withText" />
+        android:orderInCategory="101" app:showAsAction="never" />
 </menu>

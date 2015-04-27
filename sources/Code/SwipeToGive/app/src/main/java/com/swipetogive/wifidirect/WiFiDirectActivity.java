@@ -147,7 +147,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
         fragment.resetViews();
 
         manager.removeGroup(channel, new ActionListener() {
-
             @Override
             public void onFailure(int reasonCode) {
                 Log.d(TAG, "Disconnect failed. Reason :" + reasonCode);
@@ -157,7 +156,6 @@ public class WiFiDirectActivity extends ActionBarActivity implements ChannelList
             public void onSuccess() {
                 fragment.getView().setVisibility(View.GONE);
             }
-
         });
     }
 

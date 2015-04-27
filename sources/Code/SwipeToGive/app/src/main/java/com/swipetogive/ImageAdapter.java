@@ -58,6 +58,7 @@ public class ImageAdapter extends BaseAdapter {
         imageView.setImageBitmap(bm);
         return imageView;
     }
+
     public Bitmap decodeSampledBitmapFromUri(String path, int reqWidth, int reqHeight) {
 
         Bitmap bm;
