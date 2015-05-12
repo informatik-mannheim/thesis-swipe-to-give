@@ -29,7 +29,6 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_FILE_PATH = "file_url";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
-    private float degrees = 0;
 
     public FileTransferService(String name) {
         super(name);
@@ -75,7 +74,6 @@ public class FileTransferService extends IntentService {
                 Toast.makeText(context,e.getMessage(),Toast.LENGTH_SHORT).show();
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             } finally {
-
                 if (socket != null) {
                     if (socket.isConnected()) {
                         try {
